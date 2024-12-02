@@ -1,0 +1,30 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: ${SERVICE}
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/container-dependencies: "{app:[collector]}"
+    spec:
+      containers:
+      - image: ${APP_IMAGE}
+        name: app
+        ports:
+        - containerPort: 8080
+        env:
+        - name: "ENV_PORT"
+          value: "8080"
+      - image: ${COLLECTOR_IMAGE}
+        name: collector
+        startupProbe:
+          httpGet:
+            path: /
+            port: 13133
+        env:
+        - name: "MACKEREL_APIKEY"
+          valueFrom:
+            secretKeyRef:
+              key: "latest"
+              name: mackerel_apikey
